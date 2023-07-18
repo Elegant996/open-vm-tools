@@ -1,4 +1,12 @@
-FROM alpine:3.18 AS mirror
+FROM alpine:latest AS build
+ENV REPODEST="/packages"
+RUN apk add --no-cache alpine-sdk
+RUN git clone https://gitlab.alpinelinux.org/alpine/aports
+RUN mkdir -p /packages
+RUN abuild-keygen -a -i
+RUN cd community/open-vm-tools
+
+FROM alpine:latest AS mirror
 RUN mkdir -p /out/etc/apk && cp -r /etc/apk/* /out/etc/apk/
 RUN apk add --no-cache --initdb -p /out \
     alpine-baselayout \

@@ -32,12 +32,13 @@ makedepends="
 	autoconf
 	automake
 	bash
-    curl-dev
+	containerd
+	curl-dev
 	doxygen
 	fuse3-dev
 	gdk-pixbuf-xlib-dev
 	glib-dev
-    grpc-dev
+	grpc-dev
 	gtk+3.0-dev
 	gtkmm3-dev
 	libice-dev
@@ -51,7 +52,7 @@ makedepends="
 	libxtst-dev
 	linux-headers
 	openssl-dev>3
-    protobuf-dev
+	protobuf-dev
 	procps-compat-dev
 	rpcgen
 	"

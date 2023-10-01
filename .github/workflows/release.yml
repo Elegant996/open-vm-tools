@@ -24,9 +24,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Get the version
-      id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
+    - name: Get the tag
+      id: get_tag
+      run: echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\/v/}
 
     # - name: Set up QEMU
     #   run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
@@ -46,10 +46,13 @@ jobs:
       run: echo ::set-output name=ID::${GITHUB_REPOSITORY,,}
 
     - name: Publish to GitHub Container Registry
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       with:
+        build-args: |
+          TAG=~${{ steps.get_tag.outputs.TAG }}
         context: .
         platforms: linux/${{ matrix.arch }}
         push: true
         tags: |
-          ghcr.io/${{ steps.image_id.outputs.ID }}:${{ steps.get_version.outputs.VERSION }}
+          ghcr.io/${{ steps.image_id.outputs.ID }}:${{ steps.get_tag.outputs.TAG }}
+          ghcr.io/${{ steps.image_id.outputs.ID }}:latest

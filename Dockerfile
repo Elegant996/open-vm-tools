@@ -1,10 +1,14 @@
-FROM alpine:3.18 AS mirror
+FROM alpine:latest AS mirror
+
+ARG TAG
+ENV TAG ${TAG}
+
 RUN mkdir -p /out/etc/apk && cp -r /etc/apk/* /out/etc/apk/
 RUN apk add --no-cache --initdb -p /out \
     alpine-baselayout \
     busybox \
-    open-vm-tools \
-    open-vm-tools-guestinfo
+    open-vm-tools${TAG} \
+    open-vm-tools-guestinfo${TAG}
 
 # Remove apk residuals
 RUN rm -rf /out/etc/apk /out/lib/apk /out/var/cache

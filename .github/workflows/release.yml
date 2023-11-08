@@ -10,8 +10,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     permissions:
-      packages: write
       contents: read
+      packages: write
 
     strategy:
       fail-fast: true
@@ -26,7 +26,8 @@ jobs:
 
     - name: Get the tag
       id: get_tag
-      run: echo "{TAG}=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_OUTPUT
+      run: |
+        echo "TAG=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_OUTPUT
 
     # - name: Set up QEMU
     #   run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
@@ -41,11 +42,21 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set image identity
-      id: image_id
-      run: echo "{ID}=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: |
+          ghcr.io/${{ github.repository }}
+        tags: |
+          ${{ steps.get_tag.outputs.TAG }}
+          latest
+        labels: |
+          org.opencontainers.image.source=https://github.com/vmware/open-vm-tools
+          org.opencontainers.image.description="Official repository of VMware open-vm-tools project"
+          org.opencontainers.image.licenses=GPL-2.0-only
 
-    - name: Publish to GitHub Container Registry
+    - name: Build and push
       uses: docker/build-push-action@v5
       with:
         build-args: |
@@ -53,6 +64,5 @@ jobs:
         context: .
         platforms: linux/${{ matrix.arch }}
         push: true
-        tags: |
-          ghcr.io/${{ steps.image_id.outputs.ID }}:${{ steps.get_tag.outputs.TAG }}
-          ghcr.io/${{ steps.image_id.outputs.ID }}:latest
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}

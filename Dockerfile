@@ -20,3 +20,7 @@ WORKDIR /
 COPY --from=mirror /out/ /
 COPY scripts /etc/vmware-tools/scripts
 CMD ["/usr/bin/vmtoolsd"]
+
+LABEL org.opencontainers.image.source="https://github.com/vmware/open-vm-tools"
+LABEL org.opencontainers.image.description="Official repository of VMware open-vm-tools project"
+LABEL org.opencontainers.image.licenses="GPL-2.0-only"

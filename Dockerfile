@@ -1,13 +1,15 @@
-FROM alpinelinux/build-base:edge AS build-sysroot
+# FROM alpinelinux/build-base:edge AS build
 
-# Copy build directory
-COPY ./build /build
-WORKDIR /build
+# # Copy build directory
+# COPY ./build /build
+# WORKDIR /build
 
-# Build open-vm-tools
-RUN abuild-keygen -ain
-RUN abuild checksum
-RUN abuild -r
+# # Build open-vm-tools
+# RUN abuild-keygen -ain
+# RUN abuild checksum
+# RUN abuild -r
+
+FROM alpine:edge AS build-sysroot
 
 # Prepare sysroot
 RUN mkdir -p /sysroot/etc/apk && cp -r /etc/apk/* /sysroot/etc/apk/
@@ -16,11 +18,10 @@ RUN mkdir -p /sysroot/etc/apk && cp -r /etc/apk/* /sysroot/etc/apk/
 RUN apk add --no-cache --initdb -p /sysroot \
     alpine-baselayout \
     busybox \
+    open-vm-tools \
+    open-vm-tools-guestinfo \
     tzdata
 RUN rm -rf /sysroot/etc/apk /sysroot/lib/apk /sysroot/var/cache
-
-# Install open-vm-tools to new system root
-# RUN
 
 # Install entrypoint
 COPY --chmod=755 ./scripts/poweroff.sh /sysroot/etc/vmware-tools/scripts/poweroff-vm-default.d/

@@ -5,7 +5,7 @@ COPY ./build /build
 WORKDIR /build
 
 # Build open-vm-tools
-RUN abuild-keygen -ai
+RUN abuild-keygen -ain
 RUN abuild checksum
 RUN abuild -r
 

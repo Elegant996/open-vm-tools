@@ -1,8 +1,7 @@
 name: Add changelog to release
 on:
-  push:
-    tags:
-      - "v*"
+  release:
+    types: [published]
 
 jobs:
   update-release:

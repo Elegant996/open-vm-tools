@@ -1,0 +1,79 @@
+name: Publish rolling build
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build images
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+
+    strategy:     
+      fail-fast: true
+      matrix:
+        arch: ["amd64"]
+
+    steps:
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ github.token }}
+
+      - name: Sanitize repo slug
+        uses: actions/github-script@v8
+        id: repo-slug
+        with:
+          result-encoding: string
+          script: return '${{ github.repository }}'.toLowerCase()
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ steps.repo-slug.outputs.result }}
+          tags: |
+            latest
+          labels: |
+            org.opencontainers.image.source="https://github.com/vmware/open-vm-tools"
+            org.opencontainers.image.description="Official repository of VMware open-vm-tools project"
+            org.opencontainers.image.licenses="GPL-2.0-only"
+
+      - uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        continue-on-error: true
+        id: buildx1
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # Temp workaround for failed builds
+      - name: Wait to retry
+        if: steps.buildx1.outcome != 'success'
+        run: |
+          sleep 60
+
+      # Temp workaround for failed builds
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        if: steps.buildx1.outcome != 'success'
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

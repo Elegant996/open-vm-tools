@@ -1,26 +1,34 @@
-FROM alpine:latest AS mirror
+FROM alpinelinux/build-base:edge AS build-sysroot
 
-ARG TAG
-ENV TAG ${TAG}
+# Copy build directory
+COPY ./build /build
+WORKDIR /build
 
-RUN mkdir -p /out/etc/apk && cp -r /etc/apk/* /out/etc/apk/
-RUN apk add --no-cache --initdb -p /out \
+# Build open-vm-tools
+RUN abuild-keygen -ai
+RUN abuild checksum
+RUN abuild -r
+
+# Prepare sysroot
+RUN mkdir -p /sysroot/etc/apk && cp -r /etc/apk/* /sysroot/etc/apk/
+
+# Fetch runtime dependencies
+RUN apk add --no-cache --initdb -p /sysroot \
     alpine-baselayout \
     busybox \
-    open-vm-tools${TAG} \
-    open-vm-tools-guestinfo${TAG}
+    tzdata
+RUN rm -rf /sysroot/etc/apk /sysroot/lib/apk /sysroot/var/cache
 
-# Remove apk residuals
-RUN rm -rf /out/etc/apk /out/lib/apk /out/var/cache
+# Install open-vm-tools to new system root
+# RUN
 
+# Install entrypoint
+COPY --chmod=755 ./scripts/poweroff.sh /sysroot/etc/vmware-tools/scripts/poweroff-vm-default.d/
+COPY --chmod=755 ./entrypoint.sh /sysroot/
+
+# Build image
 FROM scratch
-ENTRYPOINT []
-CMD []
-WORKDIR /
-COPY --from=mirror /out/ /
-COPY scripts /etc/vmware-tools/scripts
-CMD ["/usr/bin/vmtoolsd"]
+COPY --from=build-sysroot /sysroot/ /
 
-LABEL org.opencontainers.image.source="https://github.com/vmware/open-vm-tools"
-LABEL org.opencontainers.image.description="Official repository of VMware open-vm-tools project"
-LABEL org.opencontainers.image.licenses="GPL-2.0-only"
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/usr/bin/vmtoolsd"]

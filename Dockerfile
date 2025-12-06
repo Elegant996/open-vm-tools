@@ -20,12 +20,13 @@ RUN apk add --no-cache --initdb -p /sysroot \
     busybox \
     dbus \
     open-vm-tools \
-    open-vm-tools-guestinfo \
-    tzdata
+    open-vm-tools-guestinfo
 RUN rm -rf /sysroot/etc/apk /sysroot/lib/apk /sysroot/var/cache
 
-# Install entrypoint
+# Override default poweroff-vm script
 COPY --chmod=755 ./scripts/ /sysroot/etc/vmware-tools/
+
+# Install entrypoint
 COPY --chmod=755 ./entrypoint.sh /sysroot/
 
 # Build image

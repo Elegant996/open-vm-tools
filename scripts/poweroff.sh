@@ -1,4 +1,3 @@
-#!/usr/bin/sh
-# send SIGTERM to the init system (PID 1), which causes a clean VM host-initiated shutdown
-kill -s SIGTERM 1
+#!/bin/sh
+dbus-send --system --print-reply --dest=org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager.PowerOff boolean:true
 exit 0

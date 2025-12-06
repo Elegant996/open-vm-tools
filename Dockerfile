@@ -1,32 +1,36 @@
-FROM debian:unstable-slim AS build-sysroot
+# FROM alpinelinux/build-base:edge AS build
 
-# Fetch runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    mmdebstrap
-RUN rm -rf /sysroot/var/lib/apt/lists /sysroot/var/cache/apt
+# # Copy build directory
+# COPY ./build /build
+# WORKDIR /build
+
+# # Build open-vm-tools
+# RUN abuild-keygen -ain
+# RUN abuild checksum
+# RUN abuild -r
+
+FROM alpine:edge AS build-sysroot
 
 # Prepare sysroot
-RUN mmdebstrap \
-    --variant=minbase \
-    --include=dbus \
-    --include=open-vm-tools \
-    --include=open-vm-tools-containerinfo \
-    --include=systemd-sysv \
-    unstable \
-    /sysroot
+RUN mkdir -p /sysroot/etc/apk && cp -r /etc/apk/* /sysroot/etc/apk/
 
-# Do not setup network
-RUN rm -f /sysroot/etc/vmware-tools/scripts/vmware/network
+# Fetch runtime dependencies
+RUN apk add --no-cache --initdb -p /sysroot \
+    alpine-baselayout \
+    busybox \
+    dbus \
+    open-vm-tools \
+    open-vm-tools-guestinfo \
+    tzdata
+RUN rm -rf /sysroot/etc/apk /sysroot/lib/apk /sysroot/var/cache
 
 # Install entrypoint
-# COPY --chmod=755 ./scripts/poweroff.sh /sysroot/etc/vmware-tools/scripts/poweroff-vm-default.d/
-# COPY --chmod=755 ./entrypoint.sh /sysroot/
+COPY --chmod=755 ./scripts/poweroff.sh /sysroot/etc/vmware-tools/scripts/poweroff-vm-default.d/
+COPY --chmod=755 ./entrypoint.sh /sysroot/
 
 # Build image
 FROM scratch
 COPY --from=build-sysroot /sysroot/ /
 
-ENV SYSTEMD_IN_CHROOT=0
-
-# ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/bin/vmtoolsd"]

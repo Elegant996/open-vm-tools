@@ -26,5 +26,7 @@ RUN rm -f /sysroot/etc/vmware-tools/scripts/vmware/network
 FROM scratch
 COPY --from=build-sysroot /sysroot/ /
 
+ENV SYSTEMD_IN_CHROOT=0
+
 # ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/bin/vmtoolsd"]

@@ -11,6 +11,7 @@ RUN mmdebstrap \
     --include=dbus \
     --include=open-vm-tools \
     --include=open-vm-tools-containerinfo \
+    --include=systemd-sysv \
     unstable \
     /sysroot
 

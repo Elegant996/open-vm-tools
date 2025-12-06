@@ -25,7 +25,7 @@ RUN apk add --no-cache --initdb -p /sysroot \
 RUN rm -rf /sysroot/etc/apk /sysroot/lib/apk /sysroot/var/cache
 
 # Install entrypoint
-COPY --chmod=755 ./scripts/poweroff.sh /sysroot/etc/vmware-tools/scripts/poweroff-vm
+COPY --chmod=755 ./scripts/ /sysroot/etc/vmware-tools/
 COPY --chmod=755 ./entrypoint.sh /sysroot/
 
 # Build image

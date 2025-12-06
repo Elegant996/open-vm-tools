@@ -1,35 +1,26 @@
-# FROM alpinelinux/build-base:edge AS build
-
-# # Copy build directory
-# COPY ./build /build
-# WORKDIR /build
-
-# # Build open-vm-tools
-# RUN abuild-keygen -ain
-# RUN abuild checksum
-# RUN abuild -r
-
-FROM alpine:edge AS build-sysroot
-
-# Prepare sysroot
-RUN mkdir -p /sysroot/etc/apk && cp -r /etc/apk/* /sysroot/etc/apk/
+FROM debian:unstable-slim AS build-sysroot
 
 # Fetch runtime dependencies
-RUN apk add --no-cache --initdb -p /sysroot \
-    alpine-baselayout \
-    busybox \
-    open-vm-tools \
-    open-vm-tools-guestinfo \
-    tzdata
-RUN rm -rf /sysroot/etc/apk /sysroot/lib/apk /sysroot/var/cache
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    mmdebstrap
+
+# Prepare sysroot
+RUN mmdebstrap \
+    --variant=minbase \
+    --include=open-vm-tools \
+    --include=open-vm-tools-containerinfo \
+    --include=tzdata \
+    unstable \
+    /sysroot
+RUN rm -rf /sysroot/var/lib/apt/lists/*
 
 # Install entrypoint
-COPY --chmod=755 ./scripts/poweroff.sh /sysroot/etc/vmware-tools/scripts/poweroff-vm-default.d/
-COPY --chmod=755 ./entrypoint.sh /sysroot/
+# COPY --chmod=755 ./scripts/poweroff.sh /sysroot/etc/vmware-tools/scripts/poweroff-vm-default.d/
+# COPY --chmod=755 ./entrypoint.sh /sysroot/
 
 # Build image
 FROM scratch
 COPY --from=build-sysroot /sysroot/ /
 
-ENTRYPOINT ["/entrypoint.sh"]
+# ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/bin/vmtoolsd"]

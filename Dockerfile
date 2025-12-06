@@ -23,8 +23,8 @@ RUN apk add --no-cache --initdb -p /sysroot \
     open-vm-tools-guestinfo
 RUN rm -rf /sysroot/etc/apk /sysroot/lib/apk /sysroot/var/cache
 
-# Override default poweroff-vm script
-COPY --chmod=755 ./scripts/ /sysroot/etc/vmware-tools/
+# Add poweroff over dbus script
+COPY --chmod=755 ./scripts/poweroff.sh /sysroot/etc/vmware-tools/scripts/poweroff-vm-default.d/
 
 # Install entrypoint
 COPY --chmod=755 ./entrypoint.sh /sysroot/

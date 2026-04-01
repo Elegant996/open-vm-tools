@@ -65,7 +65,7 @@ jobs:
           buildkitd-flags: --allow-insecure-entitlement security.insecure
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         continue-on-error: true
         id: buildx1
         with:
@@ -83,7 +83,7 @@ jobs:
 
       # Temp workaround for failed builds
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         if: steps.buildx1.outcome != 'success'
         with:
           context: .
